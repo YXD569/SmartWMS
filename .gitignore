@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ssr
+.DS_Store
+*.local
+*.log
+npm-debug.log*
+yarn-error.log*
+.vscode/*
+!.vscode/extensions.json
+.idea
+coverage
+.env.production.local
+server/data/*.tmp

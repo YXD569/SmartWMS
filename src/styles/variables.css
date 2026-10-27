@@ -1,0 +1,73 @@
+/* ==========================================================================
+   设计 Token —— SmartWMS 全局设计变量
+   风格方向：Industrial / Utilitarian（工业实用风），骨架对齐 ruoyi-vue-pro
+   - 后台：深色侧边栏 + 白色顶栏 + 浅灰内容区，克制、高密度、信息优先
+   - 大屏：深空蓝科技风，等宽数字，单一青色强调
+   主色 60% / 中性 30% / 强调 10%，全站仅一个强调色
+   ========================================================================== */
+:root {
+  /* ---- 品牌与语义色 ---- */
+  --sw-primary: #409eff;
+  --sw-primary-dark: #337ecc;
+  --sw-primary-light: #ecf5ff;
+  --sw-success: #67c23a;
+  --sw-warning: #e6a23c;
+  --sw-danger: #f56c6c;
+  --sw-info: #909399;
+
+  /* ---- 后台骨架（ruoyi 经典配色）---- */
+  --sw-sidebar-bg: #001529;
+  --sw-sidebar-bg-sub: #000c17;
+  --sw-sidebar-text: #bfcbd9;
+  --sw-sidebar-text-active: #ffffff;
+  --sw-sidebar-hover: #263445;
+  --sw-sidebar-width: 210px;
+  --sw-sidebar-width-collapse: 64px;
+  --sw-navbar-height: 50px;
+  --sw-tagsview-height: 34px;
+  --sw-app-bg: #f0f2f5;
+
+  /* ---- 文字 ---- */
+  --sw-text-1: #303133;
+  --sw-text-2: #606266;
+  --sw-text-3: #909399;
+  --sw-text-4: #c0c4cc;
+  --sw-border-1: #dcdfe6;
+  --sw-border-2: #e4e7ed;
+  --sw-border-3: #ebeef5;
+  --sw-fill: #f5f7fa;
+
+  /* ---- 圆角 / 阴影（三级）---- */
+  --sw-radius-sm: 2px;
+  --sw-radius: 4px;
+  --sw-radius-lg: 8px;
+  --sw-shadow-1: 0 1px 4px rgba(0, 21, 41, 0.08);
+  --sw-shadow-2: 0 2px 8px rgba(0, 21, 41, 0.12);
+  --sw-shadow-3: 0 8px 24px rgba(0, 21, 41, 0.16);
+
+  /* ---- 动效 ---- */
+  --sw-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --sw-dur-fast: 150ms;
+  --sw-dur: 280ms;
+  --sw-dur-slow: 420ms;
+
+  /* ---- 大屏 token ---- */
+  --sw-screen-bg: #050b1a;
+  --sw-screen-panel: rgba(16, 38, 76, 0.42);
+  --sw-screen-border: rgba(64, 158, 255, 0.28);
+  --sw-screen-accent: #23d7ff;
+  --sw-screen-accent-2: #ffb547;
+  --sw-screen-text: #e8f0ff;
+  --sw-screen-text-dim: #8fa8c8;
+}
+
+/* 暗色主题（顶栏切换）：只换语义层，不改骨架 */
+html.dark {
+  --sw-app-bg: #141414;
+  --sw-navbar-bg: #1f1f1f;
+  --sw-text-1: #e5eaf3;
+  --sw-text-2: #cfd3dc;
+  --sw-fill: #262727;
+  --sw-border-2: #414243;
+  --sw-border-3: #363637;
+}

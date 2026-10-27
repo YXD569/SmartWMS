@@ -1,0 +1,25 @@
+# 本地一键起「前端 + Mock 服务」
+# 前端容器由 deploy/Dockerfile 构建（nginx 托管 dist），Mock 服务单独一个容器
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  api:
+    image: node:22-alpine
+    working_dir: /app
+    command: node server/index.js
+    environment:
+      MOCK_PORT: 48081
+    ports:
+      - "48081:48081"
+    volumes:
+      - ../server:/app/server
+      - ../package.json:/app/package.json
+    restart: unless-stopped

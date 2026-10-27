@@ -1,0 +1,187 @@
+/* ==========================================================================
+   ruoyi-vue-pro 风格覆盖层：让 Element Plus 呈现 ruoyi 的经典气质
+   —— 高密度、弱圆角、表格优先、工具栏右侧聚拢
+   ========================================================================== */
+
+/* ---------- 页面容器 ---------- */
+.app-container {
+  padding: 16px;
+  background: var(--sw-app-bg);
+  min-height: calc(100vh - var(--sw-navbar-height) - var(--sw-tagsview-height) - 2px);
+}
+
+/* ---------- 搜索卡片 ---------- */
+.search-card {
+  border-radius: var(--sw-radius);
+  box-shadow: var(--sw-shadow-1);
+  margin-bottom: 12px;
+}
+.search-card :deep(.el-card__body) {
+  padding: 18px 20px 0;
+}
+.search-card :deep(.el-form-item) {
+  margin-bottom: 18px;
+}
+.search-card :deep(.el-form-item__label) {
+  color: var(--sw-text-2);
+  font-weight: 400;
+}
+.search-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---------- 表格卡片 ---------- */
+.table-card {
+  border-radius: var(--sw-radius);
+  box-shadow: var(--sw-shadow-1);
+}
+.table-card :deep(.el-card__body) {
+  padding: 12px 14px 14px;
+}
+
+/* ruoyi 表格：头部灰底、上边框加粗、行 hover 极浅 */
+.el-table th.el-table__cell {
+  background: #f8f8f9 !important;
+  color: var(--sw-text-1);
+  font-weight: 500;
+}
+.el-table {
+  --el-table-border-color: var(--sw-border-2);
+  --el-table-header-text-color: var(--sw-text-1);
+  font-size: 13px;
+}
+.el-table .el-table__row:hover > td.el-table__cell {
+  background: #f5f7fa !important;
+}
+
+/* 表格上方工具栏：左操作、右工具 */
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+.table-toolbar .toolbar-left { display: flex; gap: 8px; flex-wrap: wrap; }
+.table-toolbar .toolbar-right { display: flex; gap: 6px; align-items: center; }
+.toolbar-icon-btn {
+  padding: 6px;
+  font-size: 16px;
+  color: var(--sw-text-2);
+  cursor: pointer;
+  border-radius: var(--sw-radius);
+  transition: all var(--sw-dur-fast);
+}
+.toolbar-icon-btn:hover { background: var(--sw-fill); color: var(--sw-primary); }
+
+/* 分页：ruoyi 右对齐 */
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+/* ---------- 表格内文字操作按钮 ---------- */
+.link-btn {
+  color: var(--sw-primary);
+  cursor: pointer;
+  padding: 0 6px;
+  font-size: 13px;
+}
+.link-btn:hover { text-decoration: underline; }
+.link-btn.danger { color: var(--sw-danger); }
+.link-btn:first-child { padding-left: 0; }
+
+/* ---------- 统计小卡（首页/看板）---------- */
+.stat-card {
+  background: #fff;
+  border-radius: var(--sw-radius);
+  box-shadow: var(--sw-shadow-1);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.stat-card .stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--sw-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #fff;
+  flex: 0 0 auto;
+}
+.stat-card .stat-body { min-width: 0; }
+.stat-card .stat-label { color: var(--sw-text-3); font-size: 13px; }
+.stat-card .stat-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--sw-text-1);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.stat-card .stat-trend { font-size: 12px; color: var(--sw-text-3); margin-top: 2px; }
+
+/* ---------- 表单抽屉/对话框 ---------- */
+.sw-dialog :deep(.el-dialog__header) {
+  border-bottom: 1px solid var(--sw-border-2);
+  margin-right: 0;
+  padding: 14px 20px;
+}
+.sw-dialog :deep(.el-dialog__body) { padding: 18px 20px; }
+.sw-dialog :deep(.el-dialog__footer) {
+  border-top: 1px solid var(--sw-border-2);
+  padding: 12px 20px;
+}
+
+/* ---------- 主子表：明细区标题 ---------- */
+.sub-table-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0 10px;
+}
+.sub-table-title .title {
+  font-size: 14px;
+  font-weight: 600;
+  padding-left: 8px;
+  border-left: 3px solid var(--sw-primary);
+  line-height: 1.2;
+}
+
+/* ---------- 空状态 ---------- */
+.sw-empty {
+  padding: 40px 0;
+  text-align: center;
+  color: var(--sw-text-3);
+}
+
+/* ---------- 描述列表（详情页）---------- */
+.sw-desc :deep(.el-descriptions__label) {
+  color: var(--sw-text-3);
+  width: 110px;
+}
+
+/* ---------- 暗色主题下的卡片 ---------- */
+html.dark .stat-card,
+html.dark .search-card,
+html.dark .table-card {
+  background: #1d1e1f;
+  box-shadow: none;
+  border: 1px solid var(--sw-border-3);
+}
+html.dark .el-table th.el-table__cell {
+  background: #262727 !important;
+  color: var(--sw-text-1);
+}
+html.dark .el-table .el-table__row:hover > td.el-table__cell {
+  background: #2a2b2c !important;
+}
+
+/* ---------- nprogress 进度条改为 ruoyi 蓝 ---------- */
+#nprogress .bar { background: var(--sw-primary) !important; height: 2px !important; }
+#nprogress .peg { box-shadow: 0 0 10px var(--sw-primary), 0 0 5px var(--sw-primary) !important; }

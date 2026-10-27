@@ -1,0 +1,59 @@
+/* 全局基础样式：只做骨架与通用规则，组件细节由各自 scoped 样式承担 */
+* { box-sizing: border-box; }
+
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--sw-app-bg);
+  color: var(--sw-text-1);
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 数字统一等宽，表格与指标对齐是工业风后台的底线 */
+.num,
+td .num,
+.sw-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+a { color: var(--sw-primary); text-decoration: none; }
+
+/* 滚动条：细窄、低对比，避免抢视觉 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(144, 147, 153, 0.35); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(144, 147, 153, 0.6); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* 路由切换动画 */
+.fade-transform-enter-active,
+.fade-transform-leave-active { transition: all var(--sw-dur) var(--sw-ease-out); }
+.fade-transform-enter-from { opacity: 0; transform: translateX(-12px); }
+.fade-transform-leave-to { opacity: 0; transform: translateX(12px); }
+
+/* 动效降级：尊重系统偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 通用工具类 */
+.text-muted { color: var(--sw-text-3); }
+.text-danger { color: var(--sw-danger); }
+.text-success { color: var(--sw-success); }
+.text-warning { color: var(--sw-warning); }
+.mr8 { margin-right: 8px; }
+.mt8 { margin-top: 8px; }
+.mt16 { margin-top: 16px; }
+.flex-1 { flex: 1; }
