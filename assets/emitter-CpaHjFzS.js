@@ -1,0 +1,1 @@
+const n=new Map,i={on(t,e){const s=n.get(t)||[];s.push(e),n.set(t,s)},off(t,e){const s=n.get(t);s&&n.set(t,s.filter(o=>o!==e))},emit(t,e){(n.get(t)||[]).forEach(s=>s(e))}},r="ai:fill-result";export{r as A,i as e};

@@ -1,0 +1,1 @@
+import{r}from"./index-CHsntv3B.js";const n={overview:()=>r({url:"/screen/overview"})};function c(){const o=location.protocol==="https:"?"wss":"ws",s="/api",t=location.host;return`${o}://${t}${s}/screen/flow`}export{c as f,n as s};
