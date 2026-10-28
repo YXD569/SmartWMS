@@ -3,6 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import { getRoutes } from '@/api/auth'
 import type { RouteNode } from '@/api/types'
 import { constantRoutes } from '@/router/routes'
+import { clearDynamicRoutes } from '@/router/dynamic'
 
 /**
  * 扫描 src/views 下所有 .vue，用于后端返回 component 字符串时动态映射
@@ -46,7 +47,10 @@ function transform(nodes: RouteNode[], parentPath = ''): RouteRecordRaw[] {
       meta: {
         title: node.title,
         icon: node.icon,
-        permissions: node.permissions || []
+        permissions: node.permissions || [],
+        // 只有叶子页面参与缓存：中间层容器无组件，进 include 会让 include 匹配落空。
+        // 这里的 name 与视图 defineOptions({ name }) 一致，KeepAlive 才能按名命中
+        keepAlive: !!node.component
       },
       children: children.length ? children : undefined,
       component: isParent
@@ -88,6 +92,8 @@ export const usePermissionStore = defineStore('permission', {
       return this.dynamicRoutes
     },
     reset() {
+      // 必须先摘掉已注入的路由，否则切换账号时高权限路由会残留导致越权
+      clearDynamicRoutes()
       this.rawRoutes = []
       this.dynamicRoutes = []
       this.loaded = false

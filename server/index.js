@@ -416,10 +416,13 @@ const app = express()
 app.use(cors())
 app.use(express.json({ limit: '5mb' }))
 
-/** 鉴权中间件：登录/刷新/健康检查放行 */
+/** 鉴权中间件：登录/刷新/健康检查/大屏放行 */
 app.use('/api', (req, res, next) => {
   const p = req.path
-  if (p.startsWith('/auth/login') || p.startsWith('/auth/refresh') || p === '/health') return next()
+  // 大屏用于投屏展示，按 README 承诺免登录；仅开放只读聚合接口，不涉及任何写操作
+  const isPublic =
+    p.startsWith('/auth/login') || p.startsWith('/auth/refresh') || p === '/health' || p.startsWith('/screen/')
+  if (isPublic) return next()
   const header = req.headers.authorization || ''
   const token = header.startsWith('Bearer ') ? header.slice(7) : ''
   const body = parseToken(token)
@@ -493,6 +496,7 @@ app.get('/api/system/user/list', (req, res) => {
     phone: a.id === 1 ? '138****8888' : '139****6666',
     roleName: a.roles.includes('admin') ? '超级管理员' : '仓储专员',
     dataScope: a.dataScope,
+    warehouseIds: a.warehouseIds, 
     status: 1,
     createTime: new Date(Date.now() - (i + 1) * 86400000 * 30).toISOString()
   }))
@@ -633,7 +637,15 @@ app.post('/api/biz/bill/save', (req, res) => {
     const bill = bills.find((x) => x.id === Number(p.id))
     if (!bill) return fail(res, '单据不存在', 404)
     if (['FINISHED', 'RUNNING'].includes(bill.status)) return fail(res, `${STATUS_LABEL[bill.status]}的单据不允许修改`)
+    // 编辑时同步落库目标状态（此前只写业务字段，导致「提交审核」后仍是草稿）
+    if (p.status && p.status !== bill.status) {
+      const allowed = STATUS_FLOW[bill.status] || []
+      if (!allowed.includes(p.status)) {
+        return fail(res, `状态流转非法：${STATUS_LABEL[bill.status]} → ${STATUS_LABEL[p.status] || p.status}`)
+      }
+    }
     Object.assign(bill, {
+      status: p.status && STATUS_LABEL[p.status] ? p.status : bill.status,
       warehouseId: p.warehouseId,
       warehouseName: warehouses.find((w) => w.id === Number(p.warehouseId))?.name || bill.warehouseName,
       partnerId: p.partnerId ?? bill.partnerId,
@@ -701,15 +713,16 @@ app.get('/api/stock/inventory/list', (req, res) => {
 
 app.get('/api/stock/inventory/all', (req, res) => {
   const size = Math.min(200000, Math.max(100, Number(req.query.size) || 100000))
-  const all = getInventory(size)
+  // 与分页接口一致，先做数据范围过滤再精简字段，否则 WAREHOUSE 作用域可看到全部仓库
+  const all = scopeFilter(getInventory(size), req.user)
   // 全量接口只回传虚拟滚动所需字段，10 万行体积约 12MB -> 精简后约 6MB
   ok(res, all.map(toLightInventory))
 })
 
-app.get('/api/stock/warn', (_req, res) => ok(res, buildWarns()))
+app.get('/api/stock/warn', (req, res) => ok(res, scopeFilter(buildWarns(), req.user)))
 app.get('/api/stock/flow', (req, res) => {
   const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 50))
-  ok(res, flows.slice(0, limit))
+  ok(res, scopeFilter(flows, req.user).slice(0, limit))
 })
 
 // ---------------- BI 大屏 ----------------

@@ -176,6 +176,14 @@ let adminRefresh = ''
     d.kpi?.length === 4 && d.trend?.length === 30 && d.category?.length > 0 && d.heat?.length === 40,
     `kpi=${d.kpi?.length} trend=${d.trend?.length} heat=${d.heat?.length}`
   )
+
+  // 大屏用于投屏，按 README 承诺免登录：不带 token 也必须 200
+  const pub = await json('/screen/overview')
+  check('大屏免登录可访问', pub.status === 200 && pub.body.code === 200, `HTTP ${pub.status}`)
+
+  // 但业务接口仍必须鉴权，不能被白名单连带放开
+  const guarded = await json('/stock/warn')
+  check('业务接口仍需登录', guarded.status === 401, `HTTP ${guarded.status}`)
 }
 
 // ---------- 9. 数据权限 ----------
@@ -195,6 +203,19 @@ let adminRefresh = ''
   const inv = await json('/stock/inventory/list?page=1&pageSize=5', { headers: h })
   const ids = new Set((inv.body.data.list || []).map((r) => r.warehouseId))
   check('stock 仅可见所属仓库', [...ids].every((i) => [1, 6].includes(i)), `仓库 ${[...ids].join(',')}`)
+
+  // 全量 / 预警 / 流水三个接口此前漏做数据范围过滤，这里一并守住
+  const allRes = await json('/stock/inventory/all?size=2000', { headers: h })
+  const allIds = new Set((allRes.body.data || []).map((r) => r.warehouseId))
+  check('全量接口受数据权限约束', [...allIds].every((i) => [1, 6].includes(i)), `仓库 ${[...allIds].join(',')}`)
+
+  const warnRes = await json('/stock/warn', { headers: h })
+  const warnIds = new Set((warnRes.body.data || []).map((r) => r.warehouseId))
+  check('预警接口受数据权限约束', [...warnIds].every((i) => [1, 6].includes(i)), `仓库 ${[...warnIds].join(',')}`)
+
+  const flowRes = await json('/stock/flow?limit=50', { headers: h })
+  const flowIds = new Set((flowRes.body.data || []).map((r) => r.warehouseId))
+  check('流水接口受数据权限约束', [...flowIds].every((i) => [1, 6].includes(i)), `仓库 ${[...flowIds].join(',')}`)
 }
 
 // ---------- 10. AI：SSE 流式 + 工具调用 ----------

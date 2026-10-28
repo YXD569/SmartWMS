@@ -15,7 +15,7 @@
  * 8. 报表解读：携带指标上下文追问同比环比异动原因
  * 9. 容错与成本：首 token 耗时展示、超时降级提示、结果缓存、手机号脱敏
  */
-import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js/lib/core'
@@ -26,6 +26,7 @@ import bash from 'highlight.js/lib/languages/bash'
 
 import { streamChat } from '@/api/ai'
 import { useAppStore } from '@/stores/app'
+import { useUserStore } from '@/stores/user'
 import { emitter, AI_FILL_RESULT } from '@/utils/emitter'
 import { maskPhone } from '@/utils/format'
 import ChartRenderer, { type ChartConfig } from './ChartRenderer.vue'
@@ -109,6 +110,17 @@ const firstTokenMs = ref<number | null>(null)
 const errorMsg = ref('')
 let controller: AbortController | null = null
 let startedAt = 0
+/** 超时定时器句柄：必须可清理，否则会话被删除后回调里访问不到消息会抛错 */
+let timeoutId: number | null = null
+
+const STREAM_TIMEOUT = 60000
+
+function clearStreamTimeout() {
+  if (timeoutId) {
+    window.clearTimeout(timeoutId)
+    timeoutId = null
+  }
+}
 
 /** 结果缓存：相同问题直接复用，降低重复调用成本 */
 const cache = new Map<string, string>()
@@ -187,6 +199,11 @@ function scrollToBottom() {
 async function send(text: string) {
   const content = text.trim()
   if (!content || streaming.value) return
+  // 大屏可免登录投屏，但 AI 会话依赖登录态，未登录时给出明确提示而不是静默失败
+  if (!useUserStore().isLogin) {
+    ElMessage.warning('请先登录后再使用 AI 助手')
+    return
+  }
 
   // 命中缓存直接复用
   const cacheKey = `${scene.value}:${content}`
@@ -207,7 +224,8 @@ async function send(text: string) {
   pushMessage({ id: replyId, role: 'assistant', content: '', streaming: true, createTime: Date.now() })
 
   streaming.value = true
-  const target = () => messages.value.find((m) => m.id === replyId)!
+  // 会话可能在流式过程中被删除，这里不能做非空断言，取不到就安全跳过
+  const target = () => messages.value.find((m) => m.id === replyId)
 
   controller = streamChat(
     {
@@ -221,11 +239,15 @@ async function send(text: string) {
         firstTokenMs.value = Math.round(performance.now() - startedAt)
       },
       onDelta: (t) => {
-        target().content += t
+        const m = target()
+        if (!m) return
+        m.content += t
         scrollToBottom()
       },
       onTool: (tool: ToolResult) => {
-        target().tool = tool
+        const m = target()
+        if (!m) return
+        m.tool = tool
         // 智能填单：把识别结果回填到当前打开的单据编辑弹窗
         if (tool.name === 'fill_bill') {
           emitter.emit(AI_FILL_RESULT, { items: tool.rows })
@@ -233,38 +255,47 @@ async function send(text: string) {
         scrollToBottom()
       },
       onDone: () => {
+        clearStreamTimeout()
         const m = target()
-        m.streaming = false
         streaming.value = false
         controller = null
+        if (!m) return
+        m.streaming = false
         if (m.content) cache.set(cacheKey, m.content)
         persist()
       },
       onError: (e) => {
+        clearStreamTimeout()
         const m = target()
-        m.streaming = false
-        m.error = e.message
-        if (!m.content) m.content = '生成失败，请检查网络或稍后重试。'
         streaming.value = false
         controller = null
         errorMsg.value = e.message
+        if (!m) return
+        m.streaming = false
+        m.error = e.message
+        if (!m.content) m.content = '生成失败，请检查网络或稍后重试。'
       }
     }
   )
 
   // 超时降级：60 秒无结果主动中断，避免一直转圈
-  window.setTimeout(() => {
-    if (streaming.value && !firstTokenMs.value) {
-      controller?.abort()
-      streaming.value = false
-      target().streaming = false
-      target().error = '响应超时'
-      if (!target().content) target().content = '模型响应超时，已中断。可稍后重试或切换模型。'
-    }
-  }, 60000)
+  clearStreamTimeout()
+  timeoutId = window.setTimeout(() => {
+    timeoutId = null
+    if (!streaming.value || firstTokenMs.value) return
+    controller?.abort()
+    controller = null
+    streaming.value = false
+    const m = target()
+    if (!m) return
+    m.streaming = false
+    m.error = '响应超时'
+    if (!m.content) m.content = '模型响应超时，已中断。可稍后重试或切换模型。'
+  }, STREAM_TIMEOUT)
 }
 
 function stop() {
+  clearStreamTimeout()
   controller?.abort()
   controller = null
   streaming.value = false
@@ -339,6 +370,13 @@ onMounted(() => {
     appStore.openAi('explain')
     input.value = `请解读「${p.label}」这个指标的同比环比异动，说明可能原因与应对建议`
   })
+})
+
+onBeforeUnmount(() => {
+  // 收尾：中断在途流并清掉超时定时器，防止回调访问已销毁状态
+  clearStreamTimeout()
+  controller?.abort()
+  controller = null
 })
 
 // 场景切换时给一句引导，避免用户不知道当前模式能干什么

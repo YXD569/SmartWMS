@@ -297,6 +297,8 @@ function buildWarns() {
         id: i + 1,
         goodsName: r.goodsName,
         goodsCode: r.goodsCode,
+        // 带上 warehouseId，供服务端数据权限 scopeFilter 过滤
+        warehouseId: r.warehouseId,
         warehouseName: r.warehouseName,
         qty: r.qty,
         safetyStock: r.safetyStock,

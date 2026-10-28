@@ -3,6 +3,9 @@ import { onMounted, computed } from 'vue'
 import { ElConfigProvider } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { useAppStore } from '@/stores/app'
+// AI 助手挂在 App 根上：大屏 /bigscreen 是顶层路由，不经过 Layout，
+// 若只在 Layout 内挂载则大屏点击 KPI 卡唤起的 ai:explain-context 无人接收
+import AiAssistant from '@/components/AiAssistant.vue'
 
 const appStore = useAppStore()
 const locale = zhCn
@@ -27,5 +30,7 @@ watch(isDark, (v) => syncThemeClass(v))
 <template>
   <ElConfigProvider :locale="locale">
     <RouterView />
+    <!-- 全局常驻：任意路由（含大屏、登录页）都可唤起 -->
+    <AiAssistant />
   </ElConfigProvider>
 </template>

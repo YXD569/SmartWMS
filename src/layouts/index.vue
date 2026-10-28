@@ -3,7 +3,6 @@ import Sidebar from './components/Sidebar/index.vue'
 import Navbar from './components/Navbar.vue'
 import TagsView from './components/TagsView.vue'
 import AppMain from './components/AppMain.vue'
-import AiAssistant from '@/components/AiAssistant.vue'
 import { useAppStore } from '@/stores/app'
 
 const appStore = useAppStore()
@@ -19,8 +18,6 @@ const appStore = useAppStore()
       </div>
       <AppMain />
     </div>
-    <!-- AI 助手全局常驻，任意页面唤起，复用当前登录态与业务接口 -->
-    <AiAssistant />
   </div>
 </template>
 

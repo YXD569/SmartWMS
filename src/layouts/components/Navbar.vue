@@ -5,12 +5,14 @@ import { ElMessageBox } from 'element-plus'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import { usePermissionStore } from '@/stores/permission'
+import { useTagsViewStore } from '@/stores/tagsView'
 
 const router = useRouter()
 const route = useRoute()
 const appStore = useAppStore()
 const userStore = useUserStore()
 const permissionStore = usePermissionStore()
+const tagsStore = useTagsViewStore()
 
 /** 面包屑：基于 matched 生成 */
 const breadcrumbs = computed(() => {
@@ -37,7 +39,9 @@ async function handleCommand(cmd: string) {
   } else if (cmd === 'logout') {
     await ElMessageBox.confirm('确定要退出登录吗？', '提示', { type: 'warning' })
     await userStore.logout()
+    // 先摘动态路由（含清理残留），再清标签页缓存，最后跳登录
     permissionStore.reset()
+    tagsStore.delAll()
     router.push('/login')
   }
 }

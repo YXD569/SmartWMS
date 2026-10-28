@@ -95,8 +95,35 @@ const hourTrend = ref<{ hours: string[]; inQty: number[]; outQty: number[] } | n
 const warehouseRankRows = ref<{ name: string; value: number }[]>([])
 
 // ---------------- WebSocket 实时流水 ----------------
+/** 主动关闭标记：区分「服务端断开」与「我们自己关闭」，避免卸载后仍重连 */
+let manualClose = false
+let reconnectTimer: number | null = null
+
+/** 关闭连接但不允许触发重连（组件卸载 / 页面隐藏时使用） */
+function closeWsSilently() {
+  manualClose = true
+  if (reconnectTimer) {
+    window.clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
+  if (ws) {
+    ws.onclose = null
+    ws.onerror = null
+    ws.onmessage = null
+    try {
+      ws.close()
+    } catch {
+      // 已关闭时忽略
+    }
+    ws = null
+  }
+}
+
 function connectWs() {
+  // 避免重复建连：页面从隐藏恢复时可能并发触发
+  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return
   try {
+    manualClose = false
     ws = new WebSocket(flowWsUrl())
     ws.onopen = () => (online.value = true)
     ws.onmessage = (e) => {
@@ -113,8 +140,10 @@ function connectWs() {
     }
     ws.onclose = () => {
       online.value = false
-      // 断线 3 秒重连
-      setTimeout(connectWs, 3000)
+      // 断线 3 秒重连；手动关闭（卸载 / 页面隐藏）不重连，否则会产生僵尸连接
+      if (manualClose) return
+      if (reconnectTimer) window.clearTimeout(reconnectTimer)
+      reconnectTimer = window.setTimeout(connectWs, 3000)
     }
     ws.onerror = () => (online.value = false)
   } catch {
@@ -206,10 +235,12 @@ onMounted(() => {
         window.clearInterval(timer)
         timer = null
       }
-      ws?.close()
+      // 隐藏时断开推送，且必须静默关闭，否则 onclose 会再拉起连接
+      closeWsSilently()
+      online.value = false
     } else {
       if (!timer) timer = window.setInterval(() => (now.value = new Date()), 1000)
-      if (!ws || ws.readyState === WebSocket.CLOSED) connectWs()
+      connectWs()
     }
   }
   document.addEventListener('visibilitychange', visibilityHandler)
@@ -218,7 +249,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', calcScale)
   if (timer) window.clearInterval(timer)
-  ws?.close()
+  // 卸载时静默关闭：旧写法 ws?.close() 会触发 onclose -> 3 秒后重连，产生已销毁组件的连接
+  closeWsSilently()
   worker?.terminate()
   if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler)
 })

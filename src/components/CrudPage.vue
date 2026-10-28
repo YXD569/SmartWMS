@@ -102,12 +102,35 @@ const excelColumns = computed<ExcelColumn[]>(() =>
     .map((c) => ({ label: c.label, prop: c.prop, width: 18 }))
 )
 
-function onExport() {
+/** 导出上限：服务端单页最大 200000，这里取 10000 兼顾体积与等待时间 */
+const EXPORT_MAX = 10000
+const exporting = ref(false)
+
+/**
+ * 导出全部命中数据，而不是只导当前页。
+ * 旧实现直接拿 list.value（当前页 20 条），用户以为导出的是查询结果全集
+ */
+async function onExport() {
   if (!list.value.length) {
     ElMessage.warning('当前没有可导出的数据')
     return
   }
-  exportExcel(list.value as unknown as Record<string, unknown>[], excelColumns.value, props.name)
+  exporting.value = true
+  try {
+    // 带当前查询条件重新拉一页大容量的数据
+    const res = await props.api.list({ ...query, page: 1, pageSize: EXPORT_MAX })
+    const rows = (res?.list?.length ? res.list : list.value) as unknown as Record<string, unknown>[]
+    exportExcel(rows, excelColumns.value, props.name)
+    if (rows.length > list.value.length) {
+      ElMessage.success(`已导出全部 ${rows.length} 条（当前页仅 ${list.value.length} 条）`)
+    }
+  } catch (e: any) {
+    // 全量拉取失败时降级为导出当前页，保证功能不中断
+    exportExcel(list.value as unknown as Record<string, unknown>[], excelColumns.value, props.name)
+    ElMessage.warning('全量导出失败，已导出当前页：' + (e.message || ''))
+  } finally {
+    exporting.value = false
+  }
 }
 
 /** 导入：错误行不入库并弹窗展示明细 */
@@ -202,7 +225,7 @@ function dictOptions(dict?: string) {
           >
             批量删除
           </el-button>
-          <el-button v-permission="`wms:${name}:export`" icon="Download" @click="onExport">导出</el-button>
+          <el-button v-permission="`wms:${name}:export`" icon="Download" :loading="exporting" @click="onExport">导出</el-button>
           <el-upload
             v-if="hasPerm(`wms:${name}:import`)"
             :before-upload="beforeUpload"

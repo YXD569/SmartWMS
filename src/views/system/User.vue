@@ -11,7 +11,7 @@ const columns: ProColumn[] = [
   { label: '姓名', prop: 'nickname', width: 120 },
   { label: '所属部门', prop: 'dept', width: 150 },
   { label: '数据权限', prop: 'dataScope', width: 120, formatter: (r) => (r.dataScope === 'ALL' ? '全部仓库' : '所属仓库') },
-  { label: '可见仓库', prop: 'warehouseIds', width: 160, formatter: (r) => (r.dataScope === 'ALL' ? '全部' : `${r.warehouseIds.length} 个`) },
+  { label: '可见仓库', prop: 'warehouseIds', width: 160, formatter: (r) => (r.dataScope === 'ALL' ? '全部' : `${r.warehouseIds?.length ?? 0} 个`) },
   { label: '状态', prop: 'status', width: 90, align: 'center', formatter: (r) => (r.status === 1 ? '启用' : '停用') }
 ]
 

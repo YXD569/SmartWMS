@@ -1,4 +1,4 @@
-import { onMounted, onBeforeUnmount, shallowRef, type Ref } from 'vue'
+import { onMounted, onBeforeUnmount, onActivated, shallowRef, type Ref } from 'vue'
 import * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
 
@@ -49,6 +49,9 @@ export function useEcharts(
 
   onMounted(init)
   onBeforeUnmount(dispose)
+  // 页面被 KeepAlive 缓存后重新激活：容器重新挂载，必须补一次 resize，
+  // 否则脱离文档流期间尺寸为 0，回来后画布不重绘会显示空白
+  onActivated(() => requestAnimationFrame(resize))
 
   return { chart, setOption, resize, dispose }
 }

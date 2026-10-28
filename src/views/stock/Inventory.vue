@@ -109,6 +109,16 @@ function refresh() {
   else loadPage()
 }
 
+/**
+ * 筛选条件变化：全量模式下数据已在本地，过滤是纯前端计算，
+ * 只有分页模式才需要重新请求。旧实现无脑调 refresh()，
+ * 导致虚拟滚动模式每敲一个字都重新传输约 6MB 数据
+ */
+function onFilterChange() {
+  if (mode.value === 'virtual') return
+  loadPage()
+}
+
 onMounted(async () => {
   warehouses.value = await warehouseApi.all()
   refresh()
@@ -120,15 +130,15 @@ onMounted(async () => {
     <el-card class="search-card" shadow="never">
       <el-form :model="filter" inline @submit.prevent>
         <el-form-item label="关键词">
-          <el-input v-model="filter.keyword" placeholder="商品名称 / 编码 / 库位" clearable style="width: 180px" @change="refresh" />
+          <el-input v-model="filter.keyword" placeholder="商品名称 / 编码 / 库位" clearable style="width: 180px" @change="onFilterChange" />
         </el-form-item>
         <el-form-item label="仓库">
-          <el-select v-model="filter.warehouseId" placeholder="全部仓库" clearable style="width: 160px" @change="refresh">
+          <el-select v-model="filter.warehouseId" placeholder="全部仓库" clearable style="width: 160px" @change="onFilterChange">
             <el-option v-for="w in warehouses" :key="w.id" :label="w.name" :value="w.id" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-checkbox v-model="filter.onlyWarn" @change="refresh">仅看低于安全库存</el-checkbox>
+          <el-checkbox v-model="filter.onlyWarn" @change="onFilterChange">仅看低于安全库存</el-checkbox>
         </el-form-item>
         <el-form-item>
           <el-radio-group v-model="mode" @change="refresh">

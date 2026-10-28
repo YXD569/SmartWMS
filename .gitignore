@@ -12,3 +12,6 @@ yarn-error.log*
 coverage
 .env.production.local
 server/data/*.tmp
+
+# 本地 Agent 工作区数据（记忆与项目上下文），不入库
+.workbuddy/
